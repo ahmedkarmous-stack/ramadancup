@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔐 Admin — Tournoi Ramadan 2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold:#D4A745;--gold-bright:#F2CC6B;--gold-dim:#8B6F2E;
+            --bg-deep:#0A0E1A;--bg-card:#0F1525;--bg-card-hover:#151D33;
+            --surface:#1A2238;--border:rgba(212,167,69,0.15);--border-active:rgba(212,167,69,0.4);
+            --text:#E8E6E1;--text-dim:#8A8B94;
+            --green:#34D399;--red:#F87171;--blue:#60A5FA;--purple:#A78BFA;--orange:#FB923C;--teal:#2DD4BF;
+            --radius:16px;--radius-sm:10px;
+        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Outfit',sans-serif;background:var(--bg-deep);color:var(--text);min-height:100vh}
+
+        /* ── Login Screen ── */
+        .login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+        .login-box{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:48px 40px;width:100%;max-width:420px;text-align:center;position:relative;overflow:hidden}
+        .login-box::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+        .login-box h1{font-family:'Amiri',serif;font-size:2rem;color:var(--gold-bright);margin-bottom:8px}
+        .login-box p{color:var(--text-dim);margin-bottom:32px;font-size:0.95rem}
+        .login-box .moon{font-size:48px;margin-bottom:16px;display:block}
+        .login-input{width:100%;padding:14px 18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'Outfit',sans-serif;font-size:1rem;margin-bottom:16px;outline:none;transition:border 0.3s}
+        .login-input:focus{border-color:var(--gold)}
+        .login-input::placeholder{color:#4A4D5A}
+        .login-btn{width:100%;padding:15px;background:linear-gradient(135deg,var(--gold-dim),var(--gold));border:none;border-radius:var(--radius-sm);color:var(--bg-deep);font-family:'Outfit',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;transition:all 0.3s;text-transform:uppercase;letter-spacing:1px;margin-top:8px}
+        .login-btn:hover{box-shadow:0 8px 30px rgba(212,167,69,0.3);transform:translateY(-2px)}
+        .login-error{color:var(--red);font-size:0.88rem;margin-top:12px;display:none}
+
+        /* ── Admin Layout ── */
+        .admin-layout{display:none;min-height:100vh}
+        .admin-topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:var(--bg-card);border-bottom:1px solid var(--border);flex-wrap:wrap;gap:12px}
+        .admin-topbar h1{font-family:'Amiri',serif;font-size:1.4rem;color:var(--gold-bright)}
+        .admin-topbar-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+        .topbar-btn{padding:8px 18px;border-radius:999px;font-family:'Outfit',sans-serif;font-size:0.82rem;font-weight:500;cursor:pointer;transition:all 0.3s;border:1px solid var(--border);background:transparent;color:var(--text-dim)}
+        .topbar-btn:hover{border-color:var(--gold);color:var(--gold)}
+        .topbar-btn.danger{border-color:rgba(248,113,113,0.3);color:var(--red)}
+        .topbar-btn.danger:hover{background:rgba(248,113,113,0.1);border-color:var(--red)}
+        .admin-user{color:var(--text-dim);font-size:0.85rem}
+        .admin-user strong{color:var(--gold)}
+
+        /* Tabs */
+        .admin-tabs{display:flex;gap:6px;padding:20px 32px 0;flex-wrap:wrap}
+        .admin-tab{padding:10px 24px;border-radius:var(--radius-sm) var(--radius-sm) 0 0;font-family:'Outfit',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;border:1px solid var(--border);border-bottom:none;background:transparent;color:var(--text-dim);transition:all 0.3s}
+        .admin-tab:hover{color:var(--text);background:var(--bg-card)}
+        .admin-tab.active{background:var(--bg-card);color:var(--gold-bright);border-color:var(--border-active)}
+
+        .admin-content{padding:0 32px 40px}
+        .admin-panel{display:none;animation:fadeUp 0.35s ease}
+        .admin-panel.active{display:block}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+        /* ── Dashboard ── */
+        .dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:24px 0}
+        .dash-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:28px 20px;display:flex;align-items:center;gap:16px;transition:all 0.3s}
+        .dash-card:hover{border-color:var(--border-active);transform:translateY(-2px)}
+        .dash-card .dash-icon{font-size:2rem;width:56px;height:56px;display:flex;align-items:center;justify-content:center;border-radius:14px;flex-shrink:0}
+        .dash-icon.players{background:rgba(212,167,69,0.12)}
+        .dash-icon.active-i{background:rgba(52,211,153,0.12)}
+        .dash-icon.banned-i{background:rgba(248,113,113,0.12)}
+        .dash-icon.today-i{background:rgba(96,165,250,0.12)}
+        .dash-card .dash-info .dash-num{font-family:'JetBrains Mono',monospace;font-size:2rem;font-weight:700;color:var(--gold-bright)}
+        .dash-card .dash-info .dash-label{font-size:0.78rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
+
+        .section-title{font-family:'Amiri',serif;font-size:1.4rem;color:var(--gold-bright);margin:32px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+
+        /* Chart */
+        .chart-container{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:28px;margin-bottom:24px}
+        .chart-bars{display:flex;align-items:flex-end;gap:8px;height:180px;padding-top:20px}
+        .chart-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px}
+        .chart-bar{width:100%;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--gold-bright),var(--gold-dim));transition:height 0.8s cubic-bezier(0.22,1,0.36,1);min-height:4px}
+        .chart-label{font-size:0.65rem;color:var(--text-dim);text-align:center;writing-mode:vertical-rl;text-orientation:mixed;max-height:60px;overflow:hidden}
+        .chart-value{font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--gold)}
+
+        /* ── Table ── */
+        .table-controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px}
+        .search-box{padding:10px 18px;background:var(--surface);border:1px solid var(--border);border-radius:999px;color:var(--text);font-family:'Outfit',sans-serif;font-size:0.9rem;outline:none;width:280px;max-width:100%;transition:border 0.3s}
+        .search-box:focus{border-color:var(--gold)}
+        .search-box::placeholder{color:#4A4D5A}
+        .filter-select{padding:10px 18px;background:var(--surface);border:1px solid var(--border);border-radius:999px;color:var(--text);font-family:'Outfit',sans-serif;font-size:0.85rem;outline:none;cursor:pointer}
+        .filter-select option{background:var(--bg-card)}
+
+        .data-table{width:100%;border-collapse:separate;border-spacing:0 4px}
+        .data-table thead th{font-size:0.72rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-dim);padding:12px 14px;text-align:left;font-weight:500;cursor:pointer;user-select:none;transition:color 0.2s;white-space:nowrap}
+        .data-table thead th:hover{color:var(--gold)}
+        .data-table tbody tr{background:var(--bg-card);transition:all 0.2s}
+        .data-table tbody tr:hover{background:var(--bg-card-hover)}
+        .data-table td{padding:12px 14px;font-size:0.9rem}
+        .data-table td:first-child{border-radius:var(--radius-sm) 0 0 var(--radius-sm)}
+        .data-table td:last-child{border-radius:0 var(--radius-sm) var(--radius-sm) 0}
+
+        .badge{display:inline-block;padding:3px 12px;border-radius:999px;font-size:0.75rem;font-weight:600}
+        .badge.active{background:rgba(52,211,153,0.12);color:var(--green);border:1px solid rgba(52,211,153,0.25)}
+        .badge.banned{background:rgba(248,113,113,0.12);color:var(--red);border:1px solid rgba(248,113,113,0.25)}
+        .badge.disqualified{background:rgba(251,146,60,0.12);color:var(--orange);border:1px solid rgba(251,146,60,0.25)}
+        .game-badge-sm{display:inline-block;padding:3px 12px;border-radius:999px;font-size:0.78rem;font-weight:500;background:rgba(212,167,69,0.1);color:var(--gold-bright);border:1px solid rgba(212,167,69,0.15)}
+
+        .action-btn{padding:5px 12px;border-radius:8px;font-family:'Outfit',sans-serif;font-size:0.78rem;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-dim);transition:all 0.2s;margin-right:4px}
+        .action-btn:hover{border-color:var(--gold);color:var(--gold)}
+        .action-btn.delete{border-color:rgba(248,113,113,0.3);color:var(--red)}
+        .action-btn.delete:hover{background:rgba(248,113,113,0.1)}
+        .action-btn.ban{border-color:rgba(251,146,60,0.3);color:var(--orange)}
+        .action-btn.ban:hover{background:rgba(251,146,60,0.1)}
+
+        .empty-msg{text-align:center;padding:48px;color:var(--text-dim);font-size:0.95rem}
+        .table-count{font-size:0.82rem;color:var(--text-dim)}
+
+        /* Modal */
+        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:100;display:none;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px)}
+        .modal-overlay.show{display:flex}
+        .modal{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:32px;width:100%;max-width:480px;position:relative}
+        .modal h3{font-family:'Amiri',serif;font-size:1.3rem;color:var(--gold-bright);margin-bottom:20px}
+        .modal-close{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text-dim);font-size:1.2rem;cursor:pointer}
+        .modal-input{width:100%;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'Outfit',sans-serif;font-size:0.95rem;margin-bottom:14px;outline:none}
+        .modal-input:focus{border-color:var(--gold)}
+        .modal-input::placeholder{color:#4A4D5A}
+        .modal-btn{padding:12px 24px;background:linear-gradient(135deg,var(--gold-dim),var(--gold));border:none;border-radius:var(--radius-sm);color:var(--bg-deep);font-family:'Outfit',sans-serif;font-weight:700;cursor:pointer;font-size:0.92rem;transition:all 0.3s}
+        .modal-btn:hover{box-shadow:0 4px 20px rgba(212,167,69,0.3)}
+
+        /* Toast */
+        .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);padding:14px 28px;border-radius:var(--radius-sm);font-weight:500;z-index:200;transition:transform 0.4s cubic-bezier(0.22,1,0.36,1);box-shadow:0 12px 40px rgba(0,0,0,0.4);font-size:0.92rem}
+        .toast.show{transform:translateX(-50%) translateY(0)}
+        .toast.success{background:var(--green);color:#042F20}
+        .toast.error{background:var(--red);color:#2A0A0A}
+
+        @media(max-width:768px){
+            .admin-topbar,.admin-tabs,.admin-content{padding-left:16px;padding-right:16px}
+            .dash-grid{grid-template-columns:1fr 1fr}
+            .search-box{width:100%}
+            .data-table{font-size:0.82rem}
+            .data-table .hide-mobile{display:none}
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══ -->
+<div class="login-screen" id="loginScreen">
+    <div class="login-box">
+        <span class="moon">🔐</span>
+        <h1>Panneau Admin</h1>
+        <p>Tournoi Ramadan 2026</p>
+        <form id="loginForm">
+            <input class="login-input" type="text" id="loginUser" placeholder="Nom d'utilisateur" required autocomplete="username">
+            <input class="login-input" type="password" id="loginPass" placeholder="Mot de passe" required autocomplete="current-password">
+            <button class="login-btn" type="submit">🔓 Se connecter</button>
+        </form>
+        <div class="login-error" id="loginError"></div>
+    </div>
+</div>
+
+<!-- ═══ ADMIN LAYOUT ═══ -->
+<div class="admin-layout" id="adminLayout">
+    <div class="admin-topbar">
+        <h1>🌙 Admin — Tournoi Ramadan</h1>
+        <div class="admin-topbar-actions">
+            <span class="admin-user">👤 Connecté : <strong id="adminName"></strong></span>
+            <a href="/" class="topbar-btn">🌐 Voir le site</a>
+            <button class="topbar-btn" onclick="exportCSV()">📥 Exporter CSV</button>
+            <button class="topbar-btn" onclick="openPasswordModal()">🔑 Mot de passe</button>
+            <button class="topbar-btn danger" onclick="logout()">🚪 Déconnexion</button>
+        </div>
+    </div>
+
+    <div class="admin-tabs">
+        <button class="admin-tab active" data-panel="dashboard">📊 Dashboard</button>
+        <button class="admin-tab" data-panel="all-participants">👥 Tous les Participants</button>
+        <button class="admin-tab" data-panel="tournaments">🏆 Tournois</button>
+    </div>
+
+    <div class="admin-content">
+        <!-- DASHBOARD -->
+        <div class="admin-panel active" id="panel-dashboard">
+            <div class="dash-grid" id="dashGrid"></div>
+
+            <h3 class="section-title">📈 Inscriptions par Jour (14 derniers jours)</h3>
+            <div class="chart-container"><div class="chart-bars" id="dailyChart"></div></div>
+
+            <h3 class="section-title">🏆 Top Jeux</h3>
+            <div id="dashGameRankings"></div>
+
+            <h3 class="section-title">🕐 Dernières Inscriptions</h3>
+            <table class="data-table">
+                <thead><tr><th>ID</th><th>Joueur</th><th>Jeu</th><th>Date</th><th>Statut</th></tr></thead>
+                <tbody id="recentTable"></tbody>
+            </table>
+        </div>
+
+        <!-- ALL PARTICIPANTS -->
+        <div class="admin-panel" id="panel-all-participants">
+            <div class="table-controls" style="margin-top:24px">
+                <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+                    <input class="search-box" type="text" id="searchInput" placeholder="🔍 Rechercher un joueur...">
+                    <select class="filter-select" id="filterGame">
+                        <option value="">Tous les jeux</option>
+                    </select>
+                    <select class="filter-select" id="filterStatus">
+                        <option value="">Tous les statuts</option>
+                        <option value="active">✅ Actif</option>
+                        <option value="banned">🚫 Banni</option>
+                        <option value="disqualified">⚠️ Disqualifié</option>
+                    </select>
+                </div>
+                <span class="table-count" id="tableCount"></span>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable('id')">ID ↕</th>
+                        <th onclick="sortTable('name')">Joueur ↕</th>
+                        <th onclick="sortTable('game')">Jeu ↕</th>
+                        <th class="hide-mobile">Email</th>
+                        <th class="hide-mobile">Téléphone</th>
+                        <th onclick="sortTable('created_at')">Date ↕</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="allParticipantsTable"></tbody>
+            </table>
+            <div class="empty-msg" id="noResults" style="display:none">Aucun résultat trouvé</div>
+        </div>
+
+        <!-- TOURNAMENTS -->
+        <div class="admin-panel" id="panel-tournaments">
+            <div style="margin-top:24px;margin-bottom:20px">
+                <button class="topbar-btn" onclick="openTournamentModal()" style="font-size:0.92rem;padding:10px 24px">➕ Créer un Tournoi</button>
+            </div>
+            <table class="data-table">
+                <thead><tr><th>ID</th><th>Nom</th><th>Jeu</th><th>Max</th><th>Début</th><th>Prix</th><th>Statut</th><th>Actions</th></tr></thead>
+                <tbody id="tournamentsTable"></tbody>
+            </table>
+            <div class="empty-msg" id="noTournaments" style="display:none">Aucun tournoi créé</div>
+        </div>
+    </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="passwordModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal('passwordModal')">✕</button>
+        <h3>🔑 Changer le mot de passe</h3>
+        <input class="modal-input" type="password" id="currentPass" placeholder="Mot de passe actuel">
+        <input class="modal-input" type="password" id="newPass" placeholder="Nouveau mot de passe (min 6 car.)">
+        <button class="modal-btn" onclick="changePassword()">Confirmer</button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="tournamentModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal('tournamentModal')">✕</button>
+        <h3>🏆 Créer un Tournoi</h3>
+        <input class="modal-input" type="text" id="tName" placeholder="Nom du tournoi">
+        <input class="modal-input" type="text" id="tGame" placeholder="Jeu (ex: eFootball)">
+        <input class="modal-input" type="number" id="tMax" placeholder="Nombre max de joueurs" value="32">
+        <input class="modal-input" type="date" id="tDate">
+        <input class="modal-input" type="text" id="tPrize" placeholder="Prix (ex: 500 DT)">
+        <button class="modal-btn" onclick="createTournament()">Créer le Tournoi</button>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+let allParticipants = [];
+let sortField = 'id'; let sortDir = 'desc';
+
+const gameIcons = {'eFootball':'⚽','FC 25':'⚽','Free Fire':'🔫','PUBG Mobile':'🔫','Call of Duty Mobile':'🎯','Fortnite':'🏗️','Valorant':'🎮','League of Legends':'⚔️','Rocket League':'🚗','Brawl Stars':'⭐','Clash Royale':'👑','Tekken 8':'🥊','Street Fighter 6':'🥋'};
+
+// ── Auth ──
+async function checkAuth() {
+    try {
+        const res = await fetch(API + '/api/admin/me');
+        const data = await res.json();
+        if (data.authenticated) { showAdmin(data.admin); return; }
+    } catch(e) {}
+    document.getElementById('loginScreen').style.display = 'flex';
+}
+
+function showAdmin(admin) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminLayout').style.display = 'block';
+    document.getElementById('adminName').textContent = admin.username;
+    loadDashboard();
+    loadAllParticipants();
+    loadTournaments();
+}
+
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const errEl = document.getElementById('loginError');
+    try {
+        const res = await fetch(API + '/api/admin/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username: document.getElementById('loginUser').value,
+                password: document.getElementById('loginPass').value
+            })
+        });
+        const data = await res.json();
+        if (res.ok) { showAdmin(data.admin); }
+        else { errEl.textContent = data.error; errEl.style.display = 'block'; }
+    } catch(e) { errEl.textContent = 'Erreur de connexion'; errEl.style.display = 'block'; }
+});
+
+async function logout() {
+    await fetch(API + '/api/admin/logout', { method: 'POST' });
+    location.reload();
+}
+
+// ── Admin Tabs ──
+document.querySelectorAll('.admin-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('panel-' + tab.dataset.panel).classList.add('active');
+    });
+});
+
+// ── Dashboard ──
+async function loadDashboard() {
+    try {
+        const res = await fetch(API + '/api/admin/dashboard');
+        const d = await res.json();
+
+        document.getElementById('dashGrid').innerHTML = `
+            <div class="dash-card"><div class="dash-icon players">👥</div><div class="dash-info"><div class="dash-num">${d.total}</div><div class="dash-label">Total Inscrits</div></div></div>
+            <div class="dash-card"><div class="dash-icon active-i">✅</div><div class="dash-info"><div class="dash-num">${d.active}</div><div class="dash-label">Actifs</div></div></div>
+            <div class="dash-card"><div class="dash-icon banned-i">🚫</div><div class="dash-info"><div class="dash-num">${d.banned}</div><div class="dash-label">Bannis</div></div></div>
+            <div class="dash-card"><div class="dash-icon today-i">📅</div><div class="dash-info"><div class="dash-num">${d.today}</div><div class="dash-label">Aujourd'hui</div></div></div>
+        `;
+
+        // Daily chart
+        const chart = document.getElementById('dailyChart');
+        const days = d.dailyStats.reverse();
+        const maxD = Math.max(...days.map(x => x.count), 1);
+        chart.innerHTML = days.map(x => {
+            const h = (x.count / maxD) * 140;
+            const label = x.date.slice(5);
+            return `<div class="chart-col"><div class="chart-value">${x.count}</div><div class="chart-bar" style="height:${h}px"></div><div class="chart-label">${label}</div></div>`;
+        }).join('');
+
+        // Game rankings
+        const gr = document.getElementById('dashGameRankings');
+        const maxG = d.gameRankings.length ? d.gameRankings[0].count : 1;
+        gr.innerHTML = d.gameRankings.slice(0, 8).map((g, i) => {
+            const pct = (g.count / maxG) * 100;
+            const icon = gameIcons[g.game] || '🎮';
+            const colors = ['bar-color-1','bar-color-2','bar-color-3','bar-color-4','bar-color-5','bar-color-6','bar-color-7','bar-color-8'];
+            return `<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+                <span style="font-family:'JetBrains Mono';color:${i===0?'var(--gold-bright)':i===1?'#C0C0C0':i===2?'#CD7F32':'var(--text-dim)'};min-width:28px;text-align:center;font-weight:${i<3?'700':'400'}">#${i+1}</span>
+                <span style="font-size:1.4rem;width:40px;text-align:center">${icon}</span>
+                <div style="flex:1"><div style="font-weight:600;margin-bottom:4px">${g.game}</div>
+                    <div style="width:100%;height:8px;background:var(--surface);border-radius:99px;overflow:hidden">
+                        <div class="${colors[i%8]}" style="height:100%;width:${pct}%;border-radius:99px;transition:width 1s"></div>
+                    </div>
+                </div>
+                <span style="font-family:'JetBrains Mono';color:var(--gold);min-width:50px;text-align:right">${g.count}</span>
+            </div>`;
+        }).join('');
+
+        // Recent
+        const rt = document.getElementById('recentTable');
+        rt.innerHTML = d.recentRegistrations.map(r => `
+            <tr>
+                <td style="font-family:'JetBrains Mono';color:var(--text-dim);font-size:0.82rem">${r.id}</td>
+                <td><strong>${r.name}</strong></td>
+                <td><span class="game-badge-sm">${gameIcons[r.game]||'🎮'} ${r.game}</span></td>
+                <td style="color:var(--text-dim);font-size:0.82rem">${formatDate(r.created_at)}</td>
+                <td><span class="badge ${r.status}">${statusLabel(r.status)}</span></td>
+            </tr>
+        `).join('');
+    } catch(e) { console.error(e); }
+}
+
+// ── All Participants ──
+async function loadAllParticipants() {
+    try {
+        const res = await fetch(API + '/api/admin/participants');
+        allParticipants = await res.json();
+        populateGameFilter();
+        renderParticipantsTable();
+    } catch(e) { console.error(e); }
+}
+
+function populateGameFilter() {
+    const games = [...new Set(allParticipants.map(p => p.game))].sort();
+    const sel = document.getElementById('filterGame');
+    sel.innerHTML = '<option value="">Tous les jeux</option>' + games.map(g => `<option value="${g}">${g}</option>`).join('');
+}
+
+function renderParticipantsTable() {
+    let data = [...allParticipants];
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const filterGame = document.getElementById('filterGame').value;
+    const filterStatus = document.getElementById('filterStatus').value;
+
+    if (search) data = data.filter(p => p.name.toLowerCase().includes(search) || p.game.toLowerCase().includes(search) || (p.email||'').toLowerCase().includes(search));
+    if (filterGame) data = data.filter(p => p.game === filterGame);
+    if (filterStatus) data = data.filter(p => p.status === filterStatus);
+
+    // Sort
+    data.sort((a, b) => {
+        let va = a[sortField], vb = b[sortField];
+        if (typeof va === 'string') { va = va.toLowerCase(); vb = vb.toLowerCase(); }
+        if (va < vb) return sortDir === 'asc' ? -1 : 1;
+        if (va > vb) return sortDir === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    const tbody = document.getElementById('allParticipantsTable');
+    document.getElementById('tableCount').textContent = `${data.length} résultat${data.length>1?'s':''}`;
+
+    if (!data.length) {
+        tbody.innerHTML = '';
+        document.getElementById('noResults').style.display = 'block';
+        return;
+    }
+    document.getElementById('noResults').style.display = 'none';
+
+    tbody.innerHTML = data.map(p => `
+        <tr>
+            <td style="font-family:'JetBrains Mono';color:var(--text-dim);font-size:0.82rem">${p.id}</td>
+            <td><strong>${p.name}</strong></td>
+            <td><span class="game-badge-sm">${gameIcons[p.game]||'🎮'} ${p.game}</span></td>
+            <td class="hide-mobile" style="color:var(--text-dim);font-size:0.82rem">${p.email||'—'}</td>
+            <td class="hide-mobile" style="color:var(--text-dim);font-size:0.82rem">${p.phone||'—'}</td>
+            <td style="color:var(--text-dim);font-size:0.82rem">${formatDate(p.created_at)}</td>
+            <td><span class="badge ${p.status}">${statusLabel(p.status)}</span></td>
+            <td>
+                ${p.status === 'active' ? `<button class="action-btn ban" onclick="changeStatus(${p.id},'banned')">🚫</button>` : `<button class="action-btn" onclick="changeStatus(${p.id},'active')">✅</button>`}
+                <button class="action-btn delete" onclick="deleteParticipant(${p.id},'${p.name}')">🗑️</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function sortTable(field) {
+    if (sortField === field) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+    else { sortField = field; sortDir = 'asc'; }
+    renderParticipantsTable();
+}
+
+document.getElementById('searchInput').addEventListener('input', renderParticipantsTable);
+document.getElementById('filterGame').addEventListener('change', renderParticipantsTable);
+document.getElementById('filterStatus').addEventListener('change', renderParticipantsTable);
+
+async function changeStatus(id, status) {
+    try {
+        await fetch(API + `/api/admin/participants/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status })
+        });
+        showToast(`Statut mis à jour`, 'success');
+        loadAllParticipants();
+        loadDashboard();
+    } catch(e) { showToast('Erreur', 'error'); }
+}
+
+async function deleteParticipant(id, name) {
+    if (!confirm(`Supprimer ${name} définitivement ?`)) return;
+    try {
+        await fetch(API + `/api/admin/participants/${id}`, { method: 'DELETE' });
+        showToast(`${name} supprimé`, 'success');
+        loadAllParticipants();
+        loadDashboard();
+    } catch(e) { showToast('Erreur', 'error'); }
+}
+
+// ── Tournaments ──
+async function loadTournaments() {
+    try {
+        const res = await fetch(API + '/api/tournaments');
+        const data = await res.json();
+        const tbody = document.getElementById('tournamentsTable');
+        if (!data.length) { tbody.innerHTML = ''; document.getElementById('noTournaments').style.display = 'block'; return; }
+        document.getElementById('noTournaments').style.display = 'none';
+        const statusColors = { upcoming: 'active', live: 'badge', finished: 'disqualified' };
+        tbody.innerHTML = data.map(t => `
+            <tr>
+                <td style="font-family:'JetBrains Mono';color:var(--text-dim);font-size:0.82rem">${t.id}</td>
+                <td><strong>${t.name}</strong></td>
+                <td><span class="game-badge-sm">${gameIcons[t.game]||'🎮'} ${t.game}</span></td>
+                <td style="font-family:'JetBrains Mono';font-size:0.85rem">${t.max_players}</td>
+                <td style="color:var(--text-dim);font-size:0.85rem">${t.start_date || '—'}</td>
+                <td style="color:var(--gold);font-weight:600">${t.prize || '—'}</td>
+                <td><span class="badge ${t.status === 'upcoming' ? 'active' : t.status === 'live' ? '' : 'disqualified'}" style="${t.status==='live'?'background:rgba(96,165,250,0.12);color:var(--blue);border:1px solid rgba(96,165,250,0.25)':''}">${t.status}</span></td>
+                <td>
+                    <button class="action-btn" onclick="updateTournamentStatus(${t.id},'live')">▶️</button>
+                    <button class="action-btn" onclick="updateTournamentStatus(${t.id},'finished')">🏁</button>
+                    <button class="action-btn delete" onclick="deleteTournament(${t.id})">🗑️</button>
+                </td>
+            </tr>
+        `).join('');
+    } catch(e) { console.error(e); }
+}
+
+async function createTournament() {
+    const name = document.getElementById('tName').value.trim();
+    const game = document.getElementById('tGame').value.trim();
+    const max_players = parseInt(document.getElementById('tMax').value) || 32;
+    const start_date = document.getElementById('tDate').value;
+    const prize = document.getElementById('tPrize').value.trim();
+
+    if (!name || !game) { showToast('Nom et jeu requis', 'error'); return; }
+
+    try {
+        const res = await fetch(API + '/api/admin/tournaments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, game, max_players, start_date, prize })
+        });
+        if (res.ok) {
+            showToast('Tournoi créé !', 'success');
+            closeModal('tournamentModal');
+            loadTournaments();
+        }
+    } catch(e) { showToast('Erreur', 'error'); }
+}
+
+async function updateTournamentStatus(id, status) {
+    await fetch(API + `/api/admin/tournaments/${id}`, { method: 'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({status}) });
+    loadTournaments();
+}
+
+async function deleteTournament(id) {
+    if (!confirm('Supprimer ce tournoi ?')) return;
+    await fetch(API + `/api/admin/tournaments/${id}`, { method: 'DELETE' });
+    showToast('Tournoi supprimé', 'success');
+    loadTournaments();
+}
+
+// ── Export CSV ──
+function exportCSV() {
+    window.open(API + '/api/admin/export/csv', '_blank');
+}
+
+// ── Password ──
+async function changePassword() {
+    const curr = document.getElementById('currentPass').value;
+    const newP = document.getElementById('newPass').value;
+    if (!curr || !newP) { showToast('Remplis les deux champs', 'error'); return; }
+    try {
+        const res = await fetch(API + '/api/admin/change-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ currentPassword: curr, newPassword: newP })
+        });
+        const data = await res.json();
+        if (res.ok) { showToast('Mot de passe modifié !', 'success'); closeModal('passwordModal'); }
+        else showToast(data.error, 'error');
+    } catch(e) { showToast('Erreur', 'error'); }
+}
+
+// ── Utils ──
+function formatDate(d) {
+    if (!d) return '—';
+    const dt = new Date(d);
+    return dt.toLocaleDateString('fr-FR', {day:'numeric',month:'short',year:'numeric'}) + ' ' + dt.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+}
+
+function statusLabel(s) {
+    return s === 'active' ? '✅ Actif' : s === 'banned' ? '🚫 Banni' : s === 'disqualified' ? '⚠️ DQ' : s;
+}
+
+function openPasswordModal() { document.getElementById('passwordModal').classList.add('show'); }
+function openTournamentModal() { document.getElementById('tournamentModal').classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('show'); });
+});
+
+function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = 'toast ' + type;
+    setTimeout(() => t.classList.add('show'), 10);
+    setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// Init
+checkAuth();
+</script>
+</body>
+</html>
